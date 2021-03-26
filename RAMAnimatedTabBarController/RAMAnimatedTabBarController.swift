@@ -47,7 +47,7 @@ open class RAMAnimatedTabBarController: UITabBarController {
     }
     
     /**
-      Bottom line color
+     Bottom line color
      **/
     open var bottomLineColor: UIColor = .black {
         didSet {
@@ -70,7 +70,7 @@ open class RAMAnimatedTabBarController: UITabBarController {
      Bottom line time of animations duration
      **/
     open var bottomLineMoveDuration: TimeInterval = 0.3
-
+    
     private(set) var containers: [UIView] = []
     
     open override var viewControllers: [UIViewController]? {
@@ -86,14 +86,14 @@ open class RAMAnimatedTabBarController: UITabBarController {
     
     open override var selectedIndex: Int {
         didSet {
-           self.setBottomLinePosition(index: selectedIndex)
+            self.setBottomLinePosition(index: selectedIndex)
         }
     }
-
+    
     open override var selectedViewController: UIViewController? {
         willSet {
             guard let vc = newValue,
-                let index = viewControllers?.firstIndex(of: vc) else { return }
+                  let index = viewControllers?.firstIndex(of: vc) else { return }
             handleSelection(index: index)
         }
     }
@@ -106,7 +106,7 @@ open class RAMAnimatedTabBarController: UITabBarController {
     
     /**
      Hide UITabBar
-
+     
      - parameter isHidden: A Boolean indicating whether the UITabBarController is displayed
      */
     @available(*, deprecated, message: "Now you can use UITabBar isHidden")
@@ -115,12 +115,12 @@ open class RAMAnimatedTabBarController: UITabBarController {
     }
     
     // MARK: life circle
-
+    
     open override func viewDidLoad() {
         super.viewDidLoad()
         initializeContainers()
     }
-
+    
     override open func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         coordinator.animate(alongsideTransition: { (transitionCoordinatorContext) -> Void in
             self.layoutContainers()
@@ -147,7 +147,7 @@ open class RAMAnimatedTabBarController: UITabBarController {
             tabBar.addSubview(viewContainer)
             containers.append(viewContainer)
         }
-                
+        
         if !containers.isEmpty {
             createCustomIcons(containers: containers)
         }
@@ -184,19 +184,19 @@ open class RAMAnimatedTabBarController: UITabBarController {
         guard let items = tabBar.items as? [RAMAnimatedTabBarItem] else {
             fatalError("items must inherit RAMAnimatedTabBarItem")
         }
-
+        
         for (index, item) in items.enumerated() {
             let container = containers[index]
             let renderMode = item.iconColor.cgColor.alpha == 0 ? UIImage.RenderingMode.alwaysOriginal :
                 UIImage.RenderingMode.alwaysTemplate
-
+            
             
             let iconImage = item.image ?? item.iconView?.icon.image
             let icon = UIImageView(image: iconImage?.withRenderingMode(renderMode))
             icon.tintColor = item.iconColor
             icon.highlightedImage = item.selectedImage?.withRenderingMode(renderMode)
             container.addSubview(icon)
-
+            
             
             let textLabel = UILabel()
             if let title = item.title, !title.isEmpty {
@@ -225,7 +225,7 @@ open class RAMAnimatedTabBarController: UITabBarController {
                 item.deselectedState()
                 container.backgroundColor = (items as [RAMAnimatedTabBarItem])[index].bgDefaultColor
             }
-
+            
             item.image = nil
             item.title = ""
         }
@@ -240,32 +240,30 @@ open class RAMAnimatedTabBarController: UITabBarController {
     private func handleSelection(index: Int) {
         guard let items = tabBar.items as? [RAMAnimatedTabBarItem] else { return }
         let currentIndex = index
-
+        
         if items[currentIndex].isEnabled == false { return }
-
+        
         let controller = children[currentIndex]
-
+        
         if let shouldSelect = delegate?.tabBarController?(self, shouldSelect: controller)
-            , !shouldSelect {
+           , !shouldSelect {
             return
         }
-
+        
         if selectedIndex != currentIndex {
             let previousItem = items.at(selectedIndex)
             let previousContainer: UIView? = previousItem?.iconView?.icon.superview
             previousContainer?.backgroundColor = items[selectedIndex].bgDefaultColor
             previousItem?.deselectAnimation()
-
+            
             let currentItem: RAMAnimatedTabBarItem = items[currentIndex]
             currentItem.playAnimation()
             let currentContainer: UIView? = currentItem.iconView?.icon.superview
             currentContainer?.backgroundColor = items[currentIndex].bgSelectedColor
-
+            
             selectedIndex = index
         } else {
-            if let navVC = viewControllers?[selectedIndex] as? UINavigationController {
-                navVC.popToRootViewController(animated: true)
-            }
+            viewControllers?[selectedIndex].topNavigationController()?.popToRootViewController(animated: true)
         }
         delegate?.tabBarController?(self, didSelect: controller)
     }
@@ -273,31 +271,31 @@ open class RAMAnimatedTabBarController: UITabBarController {
 
 
 extension RAMAnimatedTabBarController {
-
+    
     /**
      Change selected color for each UITabBarItem
-
+     
      - parameter textSelectedColor: set new color for text
      - parameter iconSelectedColor: set new color for icon
      */
     open func changeSelectedColor(_ textSelectedColor: UIColor, iconSelectedColor: UIColor) {
-
+        
         let items = tabBar.items as! [RAMAnimatedTabBarItem]
         for index in 0 ..< items.count {
             let item = items[index]
-
+            
             item.animation.textSelectedColor = textSelectedColor
             item.animation.iconSelectedColor = iconSelectedColor
-
+            
             if item == tabBar.selectedItem {
                 item.selectedState()
             }
         }
     }
-
+    
     /**
      Selected UITabBarItem with animaton
-
+     
      - parameter from: Index for unselected animation
      - parameter to:   Index for selected animation
      */
@@ -306,11 +304,11 @@ extension RAMAnimatedTabBarController {
         guard let items = tabBar.items as? [RAMAnimatedTabBarItem] else {
             fatalError("items must inherit RAMAnimatedTabBarItem")
         }
-
+        
         let containerFrom = items[from].iconView?.icon.superview
         containerFrom?.backgroundColor = items[from].bgDefaultColor
         items[from].deselectAnimation()
-
+        
         let containerTo = items[to].iconView?.icon.superview
         containerTo?.backgroundColor = items[to].bgSelectedColor
         items[to].playAnimation()
